@@ -3,7 +3,10 @@ from bs4 import BeautifulSoup
 import os
 
 def get_start_urls():
-    urls = os.listdir(os.path.join('/path/to/configMap'))
+    # urls = os.listdir(os.path.join('/path/to/configMap'))
+    urls = ['https://medium.com/@jeff.d.vincent/the-why-and-how-of-sync-and-async-networking-with-microservices-in-python-635b545c3dd7']
+
+    return urls
 
 class SimpleSpider(scrapy.Spider):
     name = "simple_spider"
@@ -21,13 +24,6 @@ class SimpleSpider(scrapy.Spider):
         paragraphs = soup.find_all("p")
         for i, p in enumerate(paragraphs, 1):
             text = p.get_text(strip=True)
-            self.log(f"Paragraph {i}: {text}")
-        
-        # Example: Extract all links
-        links = soup.find_all("a", href=True)
-        for i, link in enumerate(links, 1):
-            href = link["href"]
-            link_text = link.get_text(strip=True)
-            self.log(f"Link {i}: {link_text} ({href})")
-        
-        # You can save the extracted data, yield it as an item, or perform further processing
+            with open('/Users/jeffvincent/k8s-rag-vectorizor/data/example.txt', 'a') as f:
+                f.write(text)
+            # self.log(f"Paragraph {i}: {text}")
