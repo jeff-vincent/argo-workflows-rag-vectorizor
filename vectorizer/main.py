@@ -3,6 +3,8 @@ import os
 import spacy
 from datetime import datetime
 
+from db import rag_collection
+
 def get_input_files(input_dir_path):
     filnames = os.listdir(input_dir_path)
     file_paths = []
@@ -22,13 +24,16 @@ class Vectorize():
         self.chunker = spacy.load("en_core_web_sm")
         self.source_metadata = None
         self.doc_title = None
+        self.url = None
 
     def run(self):
         for file in self.input_files:
             with open(file, 'r') as f:
                 for line in f:
                     if "Title" in line:
-                        self.doc_title = line.strip()
+                        self.doc_title = line.replace("Title: ", "").strip()
+                    if "URL" in line:
+                        self.url = line.replace("URL: ", "").strip()
                         break
 
                 self.data = f.readlines()
@@ -37,8 +42,7 @@ class Vectorize():
     def _vectorize_data(self):
             self._chunk_data(self.data[1])
             for chunk in self.chunks:
-                print(chunk)
-                mongodb_doc = {'chunk': chunk, 'page_title': 'item', 'page_url': 'item', 'date_scraped': datetime.now()}
+                mongodb_doc = {'chunk': chunk, 'page_title': self.doc_title, 'page_url': self.url, 'date_scraped': datetime.now()}
                 # response = self.openai.Embedding.create(
                 #     input=chunk,
                 #     model="text-embedding-ada-002")
@@ -64,9 +68,12 @@ class Vectorize():
                 chunk = " ".join(buffer)+ " " + sent.text
 
     def _write_vectorized_data_to_mongodb(self, mongo_doc):
-        print('********************************')
-        print('writing vector data to mongodb')
-        print('********************************')
+        # try:
+        #     r = rag_collection.find({'page_title': mongo_doc['page_title']})
+        #     # upsert
+        # except:
+        r = rag_collection.insert_one(mongo_doc)
+        print(r)
 
     def clean_up(self):
         for file in self.input_files:

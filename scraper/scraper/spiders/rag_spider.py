@@ -16,9 +16,11 @@ class RagSpider(scrapy.Spider):
     start_urls = get_start_urls()
 
     def parse(self, response):
+        url = None
         output_filepath = None
         for k, v in response.__dict__.items():
             if k == '_url':
+                url = v
                 filename = v.split('/')[-2]
                 print(filename)
                 output_filepath = os.path.join(f'/Users/jeffvincent/k8s-rag-vectorizor/data/{filename}.txt')
@@ -28,6 +30,7 @@ class RagSpider(scrapy.Spider):
         with open(output_filepath, "w", encoding="utf-8") as file:
             title = soup.title.string if soup.title else "No title"
             file.write(f"Title: {title}\n\n")
+            file.write(f"URL: {url}\n\n")
             # Iterate through all tags in the body
             for tag in soup.body.find_all(recursive=True):
                 # Process paragraphs
