@@ -1,11 +1,21 @@
 import os
 # from openai import OpenAI
 import spacy
-import time
+from datetime import datetime
+
+def get_input_files(input_dir_path):
+    filnames = os.listdir(input_dir_path)
+    file_paths = []
+    for filename in filnames:
+        file_paths.append(os.path.join(input_dir_path, filename))
+
+    return file_paths
+
 
 class Vectorize():
     def __init__(self):
-        self.input_file_path = '/Users/jeffvincent/k8s-rag-vectorizor/data/example.txt'
+        self.input_dir_path = '/Users/jeffvincent/k8s-rag-vectorizor/data/'
+        self.input_files = get_input_files(self.input_dir_path)
         # self.openai_api_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         self.data = None
         self.chunks = []
@@ -13,27 +23,29 @@ class Vectorize():
         self.source_metadata = None
         self.doc_title = None
 
-    def read_data_from_storage(self):
-        with open(self.input_file_path, 'r') as f:
-            for line in f:
-                if "Title" in line:
-                    self.doc_title = line.strip()
-                    continue
+    def run(self):
+        for file in self.input_files:
+            with open(file, 'r') as f:
+                for line in f:
+                    if "Title" in line:
+                        self.doc_title = line.strip()
+                        break
 
-            self.data = f.readlines()
+                self.data = f.readlines()
+            self._vectorize_data()
 
-    def vectorize_data(self):
-        for item in self.data:
-            self._chunk_data(item)
+    def _vectorize_data(self):
+            self._chunk_data(self.data[1])
             for chunk in self.chunks:
-                mongodb_doc = {'chunk': chunk, 'page_title': item, 'page_url': item, 'date_scraped': time.now()}
+                print(chunk)
+                mongodb_doc = {'chunk': chunk, 'page_title': 'item', 'page_url': 'item', 'date_scraped': datetime.now()}
                 # response = self.openai.Embedding.create(
                 #     input=chunk,
                 #     model="text-embedding-ada-002")
                 # embedding = response['data'][0]['embedding']
                 embedding = None
                 mongodb_doc['embedding'] = embedding
-                self.write_vectorized_data_to_mongodb(mongodb_doc)
+                self._write_vectorized_data_to_mongodb(mongodb_doc)
 
     def _chunk_data(self, data):
         max_length = 4000
@@ -51,18 +63,20 @@ class Vectorize():
                 self.chunks.append(chunk)
                 chunk = " ".join(buffer)+ " " + sent.text
 
-    def write_vectorized_data_to_mongodb(self, data):
+    def _write_vectorized_data_to_mongodb(self, mongo_doc):
+        print('********************************')
         print('writing vector data to mongodb')
-        pass
+        print('********************************')
 
     def clean_up(self):
-        os.remove(self.input_file_path)
+        for file in self.input_files:
+            os.remove(file)
+
 
 def main():
     vectorizer = Vectorize()
-    vectorizer.read_data_from_storage()
-    vectorizer.vectorize_data()
-    # vectorizer.clean_up()
+    vectorizer.run()
+    vectorizer.clean_up()
 
 
 if __name__ == "__main__":
