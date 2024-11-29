@@ -1,5 +1,4 @@
 FROM python:3.11
 COPY . .
 RUN pip install -r requirements.txt
-RUN python -m spacy download en_core_web_sm
 CMD python main.py

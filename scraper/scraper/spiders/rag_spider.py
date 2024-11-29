@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import os
 
 def get_start_urls():
-    url_files = os.listdir(os.path.join('/Users/jeffvincent/k8s-rag-vectorizor/input'))
+    url_files = os.listdir(os.path.join('/mnt/config'))
     urls = []
     for url_file in url_files:
         with open(os.path.join('/Users/jeffvincent/k8s-rag-vectorizor/input', url_file), 'r') as file:

@@ -1,7 +1,7 @@
 import os
 import logging
-
-from fastapi import FastAPI, HTTPException, Request
+import uuid
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
@@ -26,15 +26,20 @@ class ScrapeRequest(BaseModel):
 
 @app.post("/scrape-urls")
 async def scrape_urls(request: ScrapeRequest):
+    random_hash = uuid.uuid4().hex[:8]
     namespace = "default"
-    configmap_name = "scraper-configmap"
+    configmap_name = f"scraper-configmap-{random_hash}"
     pvc_name = "shared-pvc"
-    job_name = "scraper-job"
+    job_name = f"scraper-job-{random_hash}"
+
     
     # ConfigMap data: write URLs as a file-like structure
-    configmap_data = {
-        "urls.txt": "\n".join(request.urls)
-    }
+    configmap_data = {}
+    filename = 'file'
+    file_count = 0
+    for url in request.urls:
+        file_count += 1
+        configmap_data[filename + str(file_count)] = url
 
     try:
         # Create ConfigMap
@@ -62,9 +67,7 @@ async def scrape_urls(request: ScrapeRequest):
             pvc_name=pvc_name,
             configmap_name=configmap_name,
             scraper_image="scraper_image:latest",
-            scraper_command=["sh", "-c", "cat /mnt/config/urls.txt > /mnt/data/scraped_data.txt"],
             vectorizer_image="vectorizer_image:latest",
-            vectorizer_command=["sh", "-c", "cat /mnt/data/scraped_data.txt && echo 'Processed!'"]
         )
         return {"message": f"Job '{job_name}' successfully created."}
     except ApiException as e:
@@ -78,18 +81,15 @@ def create_sequential_job_with_configmap(
     pvc_name: str,
     configmap_name: str,
     scraper_image: str,
-    scraper_command: list,
     vectorizer_image: str,
-    vectorizer_command: list
 ):
-    core_v1 = client.CoreV1Api()
+    # core_v1 = client.CoreV1Api()
     batch_v1 = client.BatchV1Api()
 
     # Define the init container (scraper)
     init_container = client.V1Container(
         name="scraper",
         image=scraper_image,
-        command=scraper_command,
         volume_mounts=[
             client.V1VolumeMount(name="shared-volume", mount_path="/mnt/data"),
             client.V1VolumeMount(name="config-volume", mount_path="/mnt/config"),
@@ -100,7 +100,6 @@ def create_sequential_job_with_configmap(
     main_container = client.V1Container(
         name="vectorizer",
         image=vectorizer_image,
-        command=vectorizer_command,
         volume_mounts=[
             client.V1VolumeMount(name="shared-volume", mount_path="/mnt/data"),
         ],
