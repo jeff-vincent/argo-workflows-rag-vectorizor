@@ -24,7 +24,7 @@ class ScrapeRequest(BaseModel):
     urls: list[str]  # List of URLs to scrape
 
 
-@app.post("/scrape-urls")
+@app.post("/api/ingest")
 async def scrape_urls(request: ScrapeRequest):
     random_hash = uuid.uuid4().hex[:8]
     namespace = "default"

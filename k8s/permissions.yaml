@@ -27,3 +27,27 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: job-manager-role
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: configmap-manager
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: default
+  name: configmap-creator-binding
+subjects:
+  - kind: ServiceAccount
+    name: job-manager-sa # Updated to use the existing service account
+    namespace: default
+roleRef:
+  kind: Role
+  name: configmap-manager # Matches the role for managing ConfigMaps
+  apiGroup: rbac.authorization.k8s.io
