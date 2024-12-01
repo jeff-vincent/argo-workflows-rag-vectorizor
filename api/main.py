@@ -66,8 +66,8 @@ async def scrape_urls(request: ScrapeRequest):
             namespace=namespace,
             pvc_name=pvc_name,
             configmap_name=configmap_name,
-            scraper_image="scraper_image:latest",
-            vectorizer_image="vectorizer_image:latest",
+            scraper_image="scraper_image",
+            vectorizer_image="vectorizer_image",
         )
         return {"message": f"Job '{job_name}' successfully created."}
     except ApiException as e:
@@ -90,6 +90,7 @@ def create_sequential_job_with_configmap(
     init_container = client.V1Container(
         name="scraper",
         image=scraper_image,
+        image_pull_policy="Never",
         volume_mounts=[
             client.V1VolumeMount(name="shared-volume", mount_path="/mnt/data"),
             client.V1VolumeMount(name="config-volume", mount_path="/mnt/config"),
@@ -100,6 +101,9 @@ def create_sequential_job_with_configmap(
     main_container = client.V1Container(
         name="vectorizer",
         image=vectorizer_image,
+        image_pull_policy="Never",
+        # command=[ "/bin/bash", "-c", "--" ],
+        # args=["while true; do sleep 30; done;"],
         volume_mounts=[
             client.V1VolumeMount(name="shared-volume", mount_path="/mnt/data"),
         ],

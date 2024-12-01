@@ -16,7 +16,7 @@ def get_input_files(input_dir_path):
 
 class Vectorize():
     def __init__(self):
-        self.input_dir_path = '/Users/jeffvincent/k8s-rag-vectorizor/data/'
+        self.input_dir_path = '/mnt/data'
         self.input_files = get_input_files(self.input_dir_path)
         # self.openai_api_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         self.data = None
@@ -27,6 +27,7 @@ class Vectorize():
         self.url = None
 
     def run(self):
+        print('Iterating over input files...')
         for file in self.input_files:
             with open(file, 'r') as f:
                 for line in f:
@@ -40,8 +41,13 @@ class Vectorize():
             self._vectorize_data()
 
     def _vectorize_data(self):
-            self._chunk_data(self.data[1])
+            print('Chunking input data ...')
+            self._chunk_data(self.data[1].replace("\n", ""))
+
             for chunk in self.chunks:
+                print('********************************')
+                print(chunk)
+                print('********************************')
                 mongodb_doc = {'chunk': chunk, 'page_title': self.doc_title, 'page_url': self.url, 'date_scraped': datetime.now()}
                 # response = self.openai.Embedding.create(
                 #     input=chunk,
@@ -49,10 +55,11 @@ class Vectorize():
                 # embedding = response['data'][0]['embedding']
                 embedding = None
                 mongodb_doc['embedding'] = embedding
+                print(mongodb_doc)
                 self._write_vectorized_data_to_mongodb(mongodb_doc)
 
     def _chunk_data(self, data):
-        max_length = 4000
+        max_length = 100
         doc = self.chunker(data)
         self.chunks = []
         chunk = ''
@@ -72,6 +79,7 @@ class Vectorize():
         #     r = rag_collection.find({'page_title': mongo_doc['page_title']})
         #     # upsert
         # except:
+        print('Writing to mongodb ...')
         r = rag_collection.insert_one(mongo_doc)
         print(r)
 
@@ -82,8 +90,9 @@ class Vectorize():
 
 def main():
     vectorizer = Vectorize()
+    print('Starting vectorizer...')
     vectorizer.run()
-    vectorizer.clean_up()
+    # vectorizer.clean_up()
 
 
 if __name__ == "__main__":

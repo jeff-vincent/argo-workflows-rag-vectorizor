@@ -6,8 +6,10 @@ def get_start_urls():
     url_files = os.listdir(os.path.join('/mnt/config'))
     urls = []
     for url_file in url_files:
-        with open(os.path.join('/Users/jeffvincent/k8s-rag-vectorizor/input', url_file), 'r') as file:
-            urls.extend(file.readlines())
+        if '..' not in url_file:
+            filepath = f'/mnt/config/{url_file}'
+            with open(filepath, 'r') as file:
+                urls.extend(file.readlines())
 
     return urls
 
@@ -23,7 +25,7 @@ class RagSpider(scrapy.Spider):
                 url = v
                 filename = v.split('/')[-2]
                 print(filename)
-                output_filepath = os.path.join(f'/Users/jeffvincent/k8s-rag-vectorizor/data/{filename}.txt')
+                output_filepath = os.path.join('/mnt/data/', f'{filename}.txt')
 
         soup = BeautifulSoup(response.text, 'html.parser')
 

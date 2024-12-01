@@ -8,7 +8,7 @@ spec:
   accessModes:
     - ReadWriteMany
   hostPath:
-    path: /mnt/shared-data
+    path: /mnt/data
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
