@@ -6,7 +6,10 @@ from pydantic import BaseModel
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
+# from middleware import AuthMiddleware
+
 app = FastAPI()
+# app.add_middleware(AuthMiddleware)
 
 # Kubernetes API Client setup
 if "KUBERNETES_SERVICE_HOST" in os.environ:

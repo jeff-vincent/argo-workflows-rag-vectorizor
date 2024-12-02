@@ -1,7 +1,10 @@
 import os
+import secrets
 # from openai import OpenAI
 import spacy
+from pymongo import DeleteMany, InsertOne
 from datetime import datetime
+from bson import ObjectId
 
 from db import rag_collection
 
@@ -25,10 +28,12 @@ class Vectorize():
         self.source_metadata = None
         self.doc_title = None
         self.url = None
+        self.mongodb_docs = None
 
     def run(self):
         print('Iterating over input files...')
         for file in self.input_files:
+            self.mongodb_docs = []
             with open(file, 'r') as f:
                 for line in f:
                     if "Title" in line:
@@ -45,9 +50,6 @@ class Vectorize():
             self._chunk_data(self.data[1].replace("\n", ""))
 
             for chunk in self.chunks:
-                print('********************************')
-                print(chunk)
-                print('********************************')
                 mongodb_doc = {'chunk': chunk, 'page_title': self.doc_title, 'page_url': self.url, 'date_scraped': datetime.now()}
                 # response = self.openai.Embedding.create(
                 #     input=chunk,
@@ -56,10 +58,11 @@ class Vectorize():
                 embedding = None
                 mongodb_doc['embedding'] = embedding
                 print(mongodb_doc)
-                self._write_vectorized_data_to_mongodb(mongodb_doc)
+                self.mongodb_docs.append(mongodb_doc)
+                self._write_vectorized_data_to_mongodb()
 
     def _chunk_data(self, data):
-        max_length = 100
+        max_length = 4000
         doc = self.chunker(data)
         self.chunks = []
         chunk = ''
@@ -74,13 +77,15 @@ class Vectorize():
                 self.chunks.append(chunk)
                 chunk = " ".join(buffer)+ " " + sent.text
 
-    def _write_vectorized_data_to_mongodb(self, mongo_doc):
-        # try:
-        #     r = rag_collection.find({'page_title': mongo_doc['page_title']})
-        #     # upsert
-        # except:
+    def _write_vectorized_data_to_mongodb(self):
         print('Writing to mongodb ...')
-        r = rag_collection.insert_one(mongo_doc)
+        url = self.mongodb_docs[0]['page_url']
+        bulk_operations_list = [DeleteMany({'page_url': url})]
+        for mongo_doc in self.mongodb_docs:
+            random_string = secrets.token_hex(12)
+            mongo_doc['_id'] = ObjectId(random_string)
+            bulk_operations_list.append(InsertOne(mongo_doc))
+        r = rag_collection.bulk_write(bulk_operations_list)
         print(r)
 
     def clean_up(self):

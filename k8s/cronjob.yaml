@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: garbage-collection
+spec:
+  schedule: "0 0 * * *"  # Runs at midnight daily
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: garbage-collection
+            image:   garbage-collection
+            imagePullPolicy: "Never"
+          restartPolicy: OnFailure
+          serviceAccount: job-manager-sa

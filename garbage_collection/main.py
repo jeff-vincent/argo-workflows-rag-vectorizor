@@ -16,6 +16,7 @@ now = datetime.datetime.now(datetime.timezone.utc)
 
 # Initialize Kubernetes API client
 v1 = client.CoreV1Api()
+batch_v1 = client.BatchV1Api()
 
 def delete_old_configmaps():
     print(f"Scanning ConfigMaps in namespace: {NAMESPACE}")
@@ -40,5 +41,29 @@ def delete_old_configmaps():
     except Exception as e:
         print(f"Error occurred: {e}")
 
+def delete_old_jobs():
+    print(f"Scanning Jobs in namespace: {NAMESPACE}")
+    try:
+        # List all Jobs in the namespace
+        jobs = batch_v1.list_namespaced_job(namespace=NAMESPACE)
+        for job in jobs:
+            # Get the creation timestamp of the Job
+            creation_timestamp = job.metadata.creation_timestamp
+
+            # Calculate the age of the Job
+            age = (now - creation_timestamp).days
+
+            if age > AGE_THRESHOLD_DAYS:
+                print(f"Deleting Job: {job.metadata.name} (Age: {age} days)")
+                batch_v1.delete_namespaced_job(
+                    name=job.metadata.name,
+                    namespace=NAMESPACE
+                )
+            else:
+                print(f"Skipping Job: {job.metadata.name} (Age: {age} days)")
+    except Exception as e:
+        print(f"Error occurred: {e}")
+
 if __name__ == "__main__":
     delete_old_configmaps()
+    delete_old_jobs()

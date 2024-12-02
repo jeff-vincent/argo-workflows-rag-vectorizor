@@ -37,3 +37,4 @@ spec:
   selector:
     app: api
   type: ClusterIP
+  

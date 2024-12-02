@@ -45,9 +45,9 @@ metadata:
   name: configmap-creator-binding
 subjects:
   - kind: ServiceAccount
-    name: job-manager-sa # Updated to use the existing service account
+    name: job-manager-sa
     namespace: default
 roleRef:
   kind: Role
-  name: configmap-manager # Matches the role for managing ConfigMaps
+  name: configmap-manager 
   apiGroup: rbac.authorization.k8s.io
