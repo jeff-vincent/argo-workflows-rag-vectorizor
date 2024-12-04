@@ -6,10 +6,10 @@ from pydantic import BaseModel
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
-# from middleware import AuthMiddleware
+from middleware import AuthMiddleware
 
 app = FastAPI()
-# app.add_middleware(AuthMiddleware)
+app.add_middleware(AuthMiddleware)
 
 # Kubernetes API Client setup
 if "KUBERNETES_SERVICE_HOST" in os.environ:
@@ -69,8 +69,8 @@ async def scrape_urls(request: ScrapeRequest):
             namespace=namespace,
             pvc_name=pvc_name,
             configmap_name=configmap_name,
-            scraper_image="scraper_image",
-            vectorizer_image="vectorizer_image",
+            scraper_image="scraper",
+            vectorizer_image="vectorizer",
         )
         return {"message": f"Job '{job_name}' successfully created."}
     except ApiException as e:

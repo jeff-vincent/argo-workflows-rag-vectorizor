@@ -1,6 +1,6 @@
 import os
 import secrets
-# from openai import OpenAI
+from openai import OpenAI
 import spacy
 from pymongo import DeleteMany, InsertOne
 from datetime import datetime
@@ -21,7 +21,7 @@ class Vectorize():
     def __init__(self):
         self.input_dir_path = '/mnt/data'
         self.input_files = get_input_files(self.input_dir_path)
-        # self.openai_api_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        self.openai_api_client = OpenAI(api_key='')
         self.data = None
         self.chunks = []
         self.chunker = spacy.load("en_core_web_sm")
@@ -51,10 +51,12 @@ class Vectorize():
 
             for chunk in self.chunks:
                 mongodb_doc = {'chunk': chunk, 'page_title': self.doc_title, 'page_url': self.url, 'date_scraped': datetime.now()}
-                # response = self.openai.Embedding.create(
+                # response = self.openai_api_client.embeddings.create(
                 #     input=chunk,
                 #     model="text-embedding-ada-002")
-                # embedding = response['data'][0]['embedding']
+                # print(response)
+                # print(type(response))
+                # # embedding = response['data'][0]['embedding']
                 embedding = None
                 mongodb_doc['embedding'] = embedding
                 print(mongodb_doc)
@@ -62,7 +64,7 @@ class Vectorize():
                 self._write_vectorized_data_to_mongodb()
 
     def _chunk_data(self, data):
-        max_length = 4000
+        max_length = 100
         doc = self.chunker(data)
         self.chunks = []
         chunk = ''
@@ -97,7 +99,7 @@ def main():
     vectorizer = Vectorize()
     print('Starting vectorizer...')
     vectorizer.run()
-    # vectorizer.clean_up()
+    vectorizer.clean_up()
 
 
 if __name__ == "__main__":

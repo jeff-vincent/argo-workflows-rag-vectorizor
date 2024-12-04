@@ -5,7 +5,9 @@ from db import users_collection
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        origin = request.headers.get('origin')
+        origin = request.headers.get('x-real-ip')
+        print(f'Headers: {request.headers}')
+        print(f'Origin: {origin}')
         data = await request.json()
         api_key = data['api_key']
         try:
