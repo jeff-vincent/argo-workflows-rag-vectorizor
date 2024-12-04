@@ -51,15 +51,12 @@ class Vectorize():
 
             for chunk in self.chunks:
                 mongodb_doc = {'chunk': chunk, 'page_title': self.doc_title, 'page_url': self.url, 'date_scraped': datetime.now()}
-                # response = self.openai_api_client.embeddings.create(
-                #     input=chunk,
-                #     model="text-embedding-ada-002")
-                # print(response)
-                # print(type(response))
-                # # embedding = response['data'][0]['embedding']
-                embedding = None
+                response = self.openai_api_client.embeddings.create(
+                    input=chunk,
+                    model="text-embedding-ada-002")
+                embedding = response.data[0].embedding
+                # embedding = None
                 mongodb_doc['embedding'] = embedding
-                print(mongodb_doc)
                 self.mongodb_docs.append(mongodb_doc)
                 self._write_vectorized_data_to_mongodb()
 

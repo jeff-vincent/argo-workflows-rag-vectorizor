@@ -3,7 +3,7 @@ import pymongo
 import secrets
 
 # MONGO_PASSWORD = os.environ.get('MONGODB_PASSWORD')
-MONGODB_PASSWORD = 'USmmDHouYrxATnSJ'
+MONGODB_PASSWORD = ''
 
 def init_db():
     client = pymongo.MongoClient(f"mongodb+srv://jeffdvincent:{MONGODB_PASSWORD}@cluster0.8xe9o.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
